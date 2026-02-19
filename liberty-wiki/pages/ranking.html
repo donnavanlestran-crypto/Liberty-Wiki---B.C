@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Liberty — Ranking</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div><h1>Liberty Wiki</h1><p>Ranking</p></div>
+    </div>
+
+    <div class="controls">
+      <input id="search" class="search" placeholder="Buscar nesta página… (/)" autocomplete="off" />
+      <div class="row">
+        <button class="btn primary" id="toggleTheme">🌗 Tema</button>
+        <button class="btn" id="printBtn">🖨️ PDF</button>
+      </div>
+      <div class="hint">Clique no cabeçalho da tabela para ordenar.</div>
+    </div>
+
+    <div class="nav">
+      <div class="navGroupTitle">Páginas</div>
+      <a class="navItem" href="../index.html" data-path="/index.html"><div><b>Início</b><br><small>visão geral</small></div><span class="pill">home</span></a>
+      <a class="navItem" href="regras.html" data-path="/pages/regras.html"><div><b>Regras</b><br><small>consulta</small></div><span class="pill">rules</span></a>
+      <a class="navItem" href="cadastro-personagem.html" data-path="/pages/cadastro-personagem.html"><div><b>Cadastro</b><br><small>personagem</small></div><span class="pill">char</span></a>
+      <a class="navItem" href="cadastro-historia.html" data-path="/pages/cadastro-historia.html"><div><b>Cadastro</b><br><small>história</small></div><span class="pill">story</span></a>
+      <a class="navItem" href="ranking.html" data-path="/pages/ranking.html"><div><b>Ranking</b><br><small>Liberty</small></div><span class="pill">rank</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap">
+      <div class="articleHeader">
+        <div>
+          <h2>Ranking Liberty</h2>
+          <p>Controle simples de pontuação/participação. Dados locais + export/import.</p>
+        </div>
+        <div class="tools">
+          <button class="btn" id="exportRank">⬇️ Exportar</button>
+          <label class="btn" style="cursor:pointer;">
+            ⬆️ Importar <input id="importRank" type="file" accept="application/json" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="sectionHeader"><h3>Adicionar ao ranking</h3><span class="tag">#rank</span></div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+          <input class="input" id="player" placeholder="Jogador" />
+          <input class="input" id="char" placeholder="Personagem" />
+          <input class="input" id="score" placeholder="Pontuação (número)" />
+        </div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn primary" id="addRank">➕ Adicionar</button>
+          <button class="btn" id="clearRank">🧹 Limpar tudo</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="sectionHeader"><h3>Tabela</h3><span class="tag">#tabela</span></div>
+        <table class="table" id="table">
+          <thead>
+            <tr>
+              <th data-key="player">Jogador</th>
+              <th data-key="char">Personagem</th>
+              <th data-key="score">Pontuação</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </section>
+
+      <div class="footer">Para ranking global, plugar backend é o upgrade natural.</div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+
+<script>
+  const KEY = 'liberty_rank';
+  const tbody = document.getElementById('tbody');
+  let sortKey = 'score';
+  let sortDir = 'desc';
+
+  function load(){ return LibertyStore.get(KEY, []); }
+  function save(v){ LibertyStore.set(KEY, v); }
+
+  function render(){
+    const q = (document.getElementById('search').value || '').toLowerCase().trim();
+    let data = load();
+
+    data = data.filter(r => !q || (r.player + ' ' + r.char).toLowerCase().includes(q));
+
+    data.sort((a,b)=>{
+      const av = a[sortKey]; const bv = b[sortKey];
+      if(sortKey === 'score'){
+        const na = Number(av)||0, nb = Number(bv)||0;
+        return sortDir === 'asc' ? na-nb : nb-na;
+      }
+      const sa = String(av||'').toLowerCase();
+      const sb = String(bv||'').toLowerCase();
+      if(sa < sb) return sortDir === 'asc' ? -1 : 1;
+      if(sa > sb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    tbody.innerHTML = '';
+    if(data.length === 0){
+      tbody.innerHTML = `<tr><td colspan="4">Nenhum registro.</td></tr>`;
+      return;
+    }
+    data.forEach((r, idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${(r.player||'').replaceAll('<','&lt;')}</td>
+        <td>${(r.char||'').replaceAll('<','&lt;')}</td>
+        <td><b>${Number(r.score)||0}</b></td>
+        <td><button class="btn" data-del="${idx}">🗑️</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('addRank').addEventListener('click', ()=>{
+    const player = document.getElementById('player').value.trim();
+    const char = document.getElementById('char').value.trim();
+    const score = Number(document.getElementById('score').value);
+    if(!player) return alert('Informe o jogador.');
+    const data = load();
+    data.push({ player, char, score: Number.isFinite(score) ? score : 0, createdAt: new Date().toISOString() });
+    save(data);
+    ['player','char','score'].forEach(id=>document.getElementById(id).value='');
+    render();
+  });
+
+  tbody.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-del]');
+    if(!btn) return;
+    const idx = Number(btn.dataset.del);
+    const data = load();
+    data.splice(idx, 1);
+    save(data);
+    render();
+  });
+
+  document.getElementById('clearRank').addEventListener('click', ()=>{
+    if(confirm('Tem certeza que quer apagar o ranking local?')){ save([]); render(); }
+  });
+
+  document.querySelectorAll('#table thead th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(sortKey === key) sortDir = (sortDir === 'asc' ? 'desc' : 'asc');
+      else { sortKey = key; sortDir = key === 'score' ? 'desc' : 'asc'; }
+      render();
+    });
+  });
+
+  document.getElementById('exportRank').addEventListener('click', ()=>{
+    LibertyStore.download('ranking.json', load());
+  });
+
+  document.getElementById('importRank').addEventListener('change', async (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!Array.isArray(data)) return alert('Arquivo inválido: esperado um array.');
+    save(data);
+    render();
+  });
+
+  document.getElementById('search').addEventListener('input', render);
+  render();
+</script>
+</body>
+</html>

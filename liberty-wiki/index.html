@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Liberty — Centro de Regras</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Liberty Wiki</h1>
+        <p>Regras • Cadastros • Ranking</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input id="search" class="search" placeholder="Buscar nesta página… (/)" autocomplete="off" />
+      <div class="row">
+        <button class="btn primary" id="toggleTheme">🌗 Tema</button>
+        <button class="btn" id="printBtn">🖨️ PDF</button>
+      </div>
+      <div class="hint">Atalhos: / buscar • Esc limpar • T tema</div>
+    </div>
+
+    <div class="nav">
+      <div class="navGroupTitle">Páginas</div>
+
+      <a class="navItem" href="index.html" data-path="/index.html">
+        <div><b>Início</b><br><small>visão geral</small></div>
+        <span class="pill">home</span>
+      </a>
+
+      <a class="navItem" href="pages/regras.html" data-path="/pages/regras.html">
+        <div><b>Regras</b><br><small>consulta</small></div>
+        <span class="pill">rules</span>
+      </a>
+
+      <a class="navItem" href="pages/cadastro-personagem.html" data-path="/pages/cadastro-personagem.html">
+        <div><b>Cadastro</b><br><small>personagem</small></div>
+        <span class="pill">char</span>
+      </a>
+
+      <a class="navItem" href="pages/cadastro-historia.html" data-path="/pages/cadastro-historia.html">
+        <div><b>Cadastro</b><br><small>história</small></div>
+        <span class="pill">story</span>
+      </a>
+
+      <a class="navItem" href="pages/ranking.html" data-path="/pages/ranking.html">
+        <div><b>Ranking</b><br><small>Liberty</small></div>
+        <span class="pill">rank</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap">
+      <div class="articleHeader">
+        <div>
+          <h2>Central Liberty</h2>
+          <p>Um “manual estilo wiki” para regras e ferramentas do seu RPG.</p>
+        </div>
+        <div class="tools">
+          <a class="btn" href="pages/regras.html">📜 Abrir Regras</a>
+          <a class="btn" href="pages/ranking.html">🏆 Ver Ranking</a>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="sectionHeader">
+          <h3>Como usar</h3>
+          <span class="tag">#manual</span>
+        </div>
+
+        <div class="rule">
+          Estrutura inspirada em wikis: artigo central, índice automático e infobox.
+        </div>
+
+        <details open>
+          <summary>Próximos passos <span class="meta">customização</span></summary>
+          <div class="detailsBody">
+            <p>Edite <span class="mono">pages/regras.html</span> e troque os blocos “COLE AS REGRAS AQUI”.</p>
+            <p>No ranking, você pode exportar/importar JSON para compartilhar dados entre jogadores.</p>
+          </div>
+        </details>
+
+        <div class="footer">Feito do zero (original), só com a “vibe wiki”.</div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

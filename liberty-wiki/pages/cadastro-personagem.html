@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cadastro de Personagem • Liberty Wiki</title>
+
+  <!-- Como este arquivo está dentro de /pages, usamos ../ para achar /assets -->
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div class="brandTitle">Liberty Wiki</div>
+          <div class="brandSub">Regras • Cadastros • Ranking</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="navItem" href="../index.html">🏠 Início</a>
+        <a class="navItem" href="./regras.html">📜 Regras</a>
+        <a class="navItem active" href="./cadastro-personagem.html">🧾 Cadastro de personagem</a>
+        <a class="navItem" href="./cadastro-historia.html">📖 Cadastro de história</a>
+        <a class="navItem" href="./ranking.html">🏆 Ranking</a>
+      </nav>
+
+      <div class="sidebarFooter">
+        <div class="pill">Local</div>
+        <div class="muted">Salva no seu navegador</div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbarLeft">
+          <h1>Cadastro de personagem</h1>
+          <p class="muted">Crie fichas rápidas e anexe uma imagem (opcional).</p>
+        </div>
+
+        <div class="topbarRight">
+          <button class="btn" id="exportChars">⬇️ Exportar</button>
+
+          <label class="btn">
+            ⬆️ Importar
+            <input id="importChars" type="file" accept="application/json" style="display:none;" />
+          </label>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="grid">
+          <!-- FORM -->
+          <div class="card">
+            <div class="sectionHeader">
+              <h2>Novo personagem</h2>
+              <span class="tag">#cadastro</span>
+            </div>
+
+            <div style="display:grid; gap:10px;">
+              <input class="input" id="nome" placeholder="NOME" />
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <input class="input" id="raca" placeholder="RAÇA" />
+                <input class="input" id="classe" placeholder="CLASSE" />
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <input class="input" id="subclasse" placeholder="SUB-CLASSE" />
+                <input class="input" id="titulos" placeholder="TÍTULOS (separe por vírgula)" />
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <input class="input" id="altura" placeholder="ALTURA (ex: um metro e oitenta)" />
+                <input class="input" id="peso" placeholder="PESO (ex: oitenta quilos)" />
+              </div>
+
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <input class="input" id="rank" placeholder="RANK (ex: A, S, etc.)" />
+                <input class="input" id="poder" placeholder="PODER BASE (ex: cem por cento)" />
+              </div>
+
+              <label class="rule" style="display:grid; gap:6px;">
+                <b>Imagem do personagem (opcional)</b>
+                <input class="input" id="imagem" type="file" accept="image/*" />
+                <img id="imgPreview" alt="" style="display:none; width:120px; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border);" />
+                <small class="muted">Evite imagens muito grandes para não estourar o limite do navegador.</small>
+              </label>
+
+              <textarea id="bio" placeholder="Observações / resumo"></textarea>
+
+              <button class="btn primary" id="saveChar">💾 Salvar personagem</button>
+            </div>
+          </div>
+
+          <!-- LIST -->
+          <div class="card">
+            <div class="sectionHeader">
+              <h2>Personagens cadastrados</h2>
+              <span class="tag">#lista</span>
+            </div>
+
+            <div id="charList" style="display:grid; gap:12px;"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- app.js precisa existir em /assets e conter LibertyStore -->
+  <script src="../assets/app.js"></script>
+
+  <script>
+    // Se LibertyStore não existir (app.js não carregou), avisamos no console
+    if (typeof LibertyStore === 'undefined') {
+      console.error('LibertyStore não encontrado. Verifique ../assets/app.js e o caminho do script.');
+    }
+
+    const KEY = 'liberty_chars';
+    const list = document.getElementById('charList');
+
+    function escapeHtml(s){
+      return String(s ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;');
+    }
+
+    function readFileAsDataURL(file){
+      return new Promise((resolve, reject)=>{
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Preview da imagem
+    const imgInput = document.getElementById('imagem');
+    const preview = document.getElementById('imgPreview');
+
+    if(imgInput && preview){
+      imgInput.addEventListener('change', async ()=>{
+        const file = imgInput.files?.[0];
+        if(!file){
+          preview.src = '';
+          preview.style.display = 'none';
+          return;
+        }
+        const dataUrl = await readFileAsDataURL(file);
+        preview.src = dataUrl;
+        preview.style.display = 'block';
+      });
+    }
+
+    function render(){
+      const chars = LibertyStore.get(KEY, []);
+      list.innerHTML = '';
+
+      if(!chars.length){
+        list.innerHTML = '<div class="rule">Nenhum personagem cadastrado ainda.</div>';
+        return;
+      }
+
+      chars.forEach((c, idx)=>{
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        card.innerHTML = `
+          <div class="sectionHeader">
+            <h3>${escapeHtml(c.nome || 'Sem nome')} <span class="pill">${escapeHtml(c.rank || '—')}</span></h3>
+            <span class="tag">#personagem</span>
+          </div>
+
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            ${c.imagem ? `<img src="${c.imagem}" alt="Imagem do personagem" style="width:84px; height:84px; object-fit:cover; border-radius:12px; border:1px solid var(--border);">` : ''}
+
+            <div style="flex:1; display:grid; gap:8px;">
+              <div class="rule"><b>Raça:</b> ${escapeHtml(c.raca || '—')} • <b>Classe:</b> ${escapeHtml(c.classe || '—')} • <b>Sub-classe:</b> ${escapeHtml(c.subclasse || '—')}</div>
+              <div class="rule"><b>Altura:</b> ${escapeHtml(c.altura || '—')} • <b>Peso:</b> ${escapeHtml(c.peso || '—')}</div>
+              <div class="rule"><b>Títulos:</b> ${escapeHtml(c.titulos || '—')}</div>
+              <div class="rule"><b>Poder base:</b> ${escapeHtml(c.poder || '—')}</div>
+            </div>
+          </div>
+
+          <div style="color:var(--muted); line-height:1.55; margin-top:10px;">
+            ${escapeHtml(c.bio || '')}
+          </div>
+
+          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn" data-del="${idx}">🗑️ Remover</button>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+    }
+
+    document.getElementById('saveChar').addEventListener('click', async ()=>{
+      const chars = LibertyStore.get(KEY, []);
+
+      const file = document.getElementById('imagem').files?.[0];
+      let imagemDataUrl = '';
+      if(file){
+        imagemDataUrl = await readFileAsDataURL(file);
+      }
+
+      chars.unshift({
+        nome: document.getElementById('nome').value.trim(),
+        raca: document.getElementById('raca').value.trim(),
+        classe: document.getElementById('classe').value.trim(),
+        subclasse: document.getElementById('subclasse').value.trim(),
+        altura: document.getElementById('altura').value.trim(),
+        peso: document.getElementById('peso').value.trim(),
+        titulos: document.getElementById('titulos').value.trim(),
+        rank: document.getElementById('rank').value.trim(),
+        poder: document.getElementById('poder').value.trim(),
+        bio: document.getElementById('bio').value.trim(),
+        imagem: imagemDataUrl,
+        createdAt: new Date().toISOString()
+      });
+
+      LibertyStore.set(KEY, chars);
+
+      // Limpar campos
+      ['nome','raca','classe','subclasse','altura','peso','titulos','rank','poder','bio'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.value = '';
+      });
+
+      const img = document.getElementById('imagem');
+      if(img) img.value = '';
+
+      if(preview){
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+
+      render();
+    });
+
+    // Remover
+    list.addEventListener('click', (e)=>{
+      const btn = e.target.closest('button[data-del]');
+      if(!btn) return;
+
+      const idx = Number(btn.dataset.del);
+      const chars = LibertyStore.get(KEY, []);
+      chars.splice(idx, 1);
+      LibertyStore.set(KEY, chars);
+      render();
+    });
+
+    // Exportar
+    document.getElementById('exportChars').addEventListener('click', ()=>{
+      const data = LibertyStore.get(KEY, []);
+      LibertyStore.download('personagens.json', data);
+    });
+
+    // Importar
+    document.getElementById('importChars').addEventListener('change', async (e)=>{
+      const file = e.target.files?.[0];
+      if(!file) return;
+
+      const text = await file.text();
+      let data;
+      try{
+        data = JSON.parse(text);
+      }catch(err){
+        alert('JSON inválido.');
+        return;
+      }
+
+      if(!Array.isArray(data)){
+        alert('Arquivo inválido: esperado uma lista (array).');
+        return;
+      }
+
+      LibertyStore.set(KEY, data);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

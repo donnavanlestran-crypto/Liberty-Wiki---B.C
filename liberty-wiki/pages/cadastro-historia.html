@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Liberty — Cadastro de História</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div><h1>Liberty Wiki</h1><p>Cadastro de História</p></div>
+    </div>
+
+    <div class="controls">
+      <input id="search" class="search" placeholder="Buscar nesta página… (/)" autocomplete="off" />
+      <div class="row">
+        <button class="btn primary" id="toggleTheme">🌗 Tema</button>
+        <button class="btn" id="printBtn">🖨️ PDF</button>
+      </div>
+      <div class="hint">Atalhos: / buscar • Esc limpar • T tema</div>
+    </div>
+
+    <div class="nav">
+      <div class="navGroupTitle">Páginas</div>
+      <a class="navItem" href="../index.html" data-path="/index.html"><div><b>Início</b><br><small>visão geral</small></div><span class="pill">home</span></a>
+      <a class="navItem" href="regras.html" data-path="/pages/regras.html"><div><b>Regras</b><br><small>consulta</small></div><span class="pill">rules</span></a>
+      <a class="navItem" href="cadastro-personagem.html" data-path="/pages/cadastro-personagem.html"><div><b>Cadastro</b><br><small>personagem</small></div><span class="pill">char</span></a>
+      <a class="navItem" href="cadastro-historia.html" data-path="/pages/cadastro-historia.html"><div><b>Cadastro</b><br><small>história</small></div><span class="pill">story</span></a>
+      <a class="navItem" href="ranking.html" data-path="/pages/ranking.html"><div><b>Ranking</b><br><small>Liberty</small></div><span class="pill">rank</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap">
+      <div class="articleHeader">
+        <div>
+          <h2>Cadastro de História</h2>
+          <p>Arcos, capítulos, eventos e registros — salvo no navegador.</p>
+        </div>
+        <div class="tools">
+          <button class="btn" id="exportStories">⬇️ Exportar</button>
+          <label class="btn" style="cursor:pointer;">
+            ⬆️ Importar <input id="importStories" type="file" accept="application/json" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="sectionHeader"><h3>Nova história</h3><span class="tag">#story</span></div>
+
+        <div style="display:grid; gap:10px;">
+          <input class="input" id="titulo" placeholder="Título do arco/capítulo" />
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <input class="input" id="autor" placeholder="Autor / Narrador" />
+            <input class="input" id="status" placeholder="Status (ex: em andamento, concluído)" />
+          </div>
+          <textarea id="texto" placeholder="Resumo / eventos / links"></textarea>
+
+          <button class="btn primary" id="saveStory">💾 Salvar história</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="sectionHeader"><h3>Lista</h3><span class="tag">#lista</span></div>
+        <div id="storyList" style="display:grid; gap:10px;"></div>
+      </section>
+
+      <div class="footer">Quando você quiser “wiki de verdade”, isso vira páginas geradas por template.</div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+
+<script>
+  const KEY = 'liberty_stories';
+  const list = document.getElementById('storyList');
+
+  function render(){
+    const stories = LibertyStore.get(KEY, []);
+    list.innerHTML = '';
+    if(stories.length === 0){
+      list.innerHTML = '<div class="rule">Nenhuma história cadastrada ainda.</div>';
+      return;
+    }
+    stories.forEach((s, idx)=>{
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="sectionHeader">
+          <h3>${s.titulo || 'Sem título'} <span class="pill">${s.status || '—'}</span></h3>
+          <span class="tag">#história</span>
+        </div>
+        <div class="rule"><b>Autor:</b> ${s.autor || '—'}</div>
+        <div style="color:var(--muted); line-height:1.55;">${(s.texto || '').replaceAll('<','&lt;')}</div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn" data-del="${idx}">🗑️ Remover</button>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  document.getElementById('saveStory').addEventListener('click', ()=>{
+    const stories = LibertyStore.get(KEY, []);
+    stories.unshift({
+      titulo: document.getElementById('titulo').value.trim(),
+      autor: document.getElementById('autor').value.trim(),
+      status: document.getElementById('status').value.trim(),
+      texto: document.getElementById('texto').value.trim(),
+      createdAt: new Date().toISOString()
+    });
+    LibertyStore.set(KEY, stories);
+    ['titulo','autor','status','texto'].forEach(id=>document.getElementById(id).value='');
+    render();
+  });
+
+  list.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-del]');
+    if(!btn) return;
+    const idx = Number(btn.dataset.del);
+    const stories = LibertyStore.get(KEY, []);
+    stories.splice(idx, 1);
+    LibertyStore.set(KEY, stories);
+    render();
+  });
+
+  document.getElementById('exportStories').addEventListener('click', ()=>{
+    LibertyStore.download('historias.json', LibertyStore.get(KEY, []));
+  });
+
+  document.getElementById('importStories').addEventListener('change', async (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!Array.isArray(data)) return alert('Arquivo inválido: esperado um array.');
+    LibertyStore.set(KEY, data);
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>

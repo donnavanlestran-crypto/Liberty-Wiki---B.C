@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Liberty — Regras</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Liberty Wiki</h1>
+        <p>Regras</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input id="search" class="search" placeholder="Buscar nesta página… (/)" autocomplete="off" />
+      <div class="row">
+        <button class="btn primary" id="toggleTheme">🌗 Tema</button>
+        <button class="btn" id="printBtn">🖨️ PDF</button>
+      </div>
+      <div class="hint">Atalhos: / buscar • Esc limpar • T tema</div>
+    </div>
+
+    <div class="nav">
+      <div class="navGroupTitle">Páginas</div>
+      <a class="navItem" href="../index.html" data-path="/index.html"><div><b>Início</b><br><small>visão geral</small></div><span class="pill">home</span></a>
+      <a class="navItem" href="regras.html" data-path="/pages/regras.html"><div><b>Regras</b><br><small>consulta</small></div><span class="pill">rules</span></a>
+      <a class="navItem" href="cadastro-personagem.html" data-path="/pages/cadastro-personagem.html"><div><b>Cadastro</b><br><small>personagem</small></div><span class="pill">char</span></a>
+      <a class="navItem" href="cadastro-historia.html" data-path="/pages/cadastro-historia.html"><div><b>Cadastro</b><br><small>história</small></div><span class="pill">story</span></a>
+      <a class="navItem" href="ranking.html" data-path="/pages/ranking.html"><div><b>Ranking</b><br><small>Liberty</small></div><span class="pill">rank</span></a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap">
+      <div class="articleHeader">
+        <div>
+          <h2>Regras Liberty</h2>
+          <p>Consulta organizada por tópicos, com Índice automático e infobox.</p>
+        </div>
+        <div class="tools">
+          <button class="btn" onclick="alert('Aqui você pode plugar um editor no futuro.')">✏️ Editar</button>
+          <button class="btn" onclick="alert('Aqui pode virar um histórico se você usar backend.')">🕒 Histórico</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="article">
+
+          <section class="card">
+            <div class="sectionHeader">
+              <h3>Índice</h3>
+              <span class="tag">#toc</span>
+            </div>
+            <div class="toc" id="toc"></div>
+          </section>
+
+          <section class="card">
+            <div class="sectionHeader">
+              <h3>Visão geral</h3>
+              <span class="tag">#core</span>
+            </div>
+            <h2>Princípios</h2>
+            <div class="rule"><b>COLE AS REGRAS AQUI:</b> “Nada é absoluto”, critérios de validação, etc.</div>
+
+            <h2>Turnos e ações</h2>
+            <details open>
+              <summary>Limite de ações <span class="meta">custo por turno</span></summary>
+              <div class="detailsBody">
+                <div class="rule"><b>COLE AS REGRAS AQUI:</b> quantas ações, o que é livre, combos, etc.</div>
+              </div>
+            </details>
+
+            <h2>Recargas</h2>
+            <details>
+              <summary>Cooldowns <span class="meta">buff, debuff, cura, neutralização</span></summary>
+              <div class="detailsBody">
+                <div class="rule"><b>COLE AS REGRAS AQUI:</b> tabela de recargas.</div>
+              </div>
+            </details>
+
+            <h2>Trap, Counter e Cutting</h2>
+            <details>
+              <summary>Gatilhos e limitações <span class="meta">quando vale / quando nega</span></summary>
+              <div class="detailsBody">
+                <div class="rule"><b>COLE AS REGRAS AQUI:</b> regras completas desses formatos.</div>
+              </div>
+            </details>
+
+          </section>
+
+          <div class="footer">Página feita para crescer — só ir adicionando novos h2/h3 que o índice se monta sozinho.</div>
+        </div>
+
+        <aside class="infobox">
+          <div class="head">Infobox — Liberty</div>
+          <div class="body">
+            <div class="kv">
+              <div><b>Versão</b><span>um ponto zero</span></div>
+              <div><b>Escopo</b><span>regras</span></div>
+              <div><b>Foco</b><span>combate</span></div>
+              <div><b>Formato</b><span>wiki</span></div>
+            </div>
+            <div class="rule">
+              Dica: use a infobox para “regras-chave” (limites, alcance máx, recarga padrão, etc.).
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="../assets/app.js"></script>
+
+</body>
+</html>
